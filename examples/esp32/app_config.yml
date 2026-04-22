@@ -1,0 +1,49 @@
+---
+# ESP32 HF-FDO2 Driver — app matrix for build scripts / CI
+version: "1.0"
+
+metadata:
+  project: "ESP32 HF-FDO2 Driver Examples"
+  default_app: "fdo2_minimal_example"
+  target: "esp32s3"
+  idf_versions: ["release/v5.5", "release/v5.4"]
+  build_types: [["Debug", "Release"], ["Debug"]]
+
+apps:
+  fdo2_minimal_example:
+    description: "Minimal PSUP loop: #VERS, #IDNR, periodic MEA on UART1"
+    source_file: "fdo2_minimal_example.cpp"
+    category: "example"
+    idf_versions: ["release/v5.5"]
+    build_types: ["Debug", "Release"]
+    ci_enabled: true
+    featured: true
+    hardware_required: true
+    features:
+      - "CRTP UART adapter (8N1)"
+      - "Decode O2 / pO2 / sample temperature from MEA"
+
+build_config:
+  build_types:
+    Debug:
+      description: "Debug build"
+      cmake_build_type: "Debug"
+      optimization: "-O0"
+      debug_level: "-g3"
+      defines: ["DEBUG"]
+
+    Release:
+      description: "Release build"
+      cmake_build_type: "Release"
+      optimization: "-O2"
+      debug_level: "-g0"
+      defines: ["NDEBUG"]
+
+  build_directory_pattern: "build-app-{app_type}-type-{build_type}-target-{target}-idf-{idf_version}"
+  project_name_pattern: "esp32_fdo2_{app_type}_app"
+
+ci_config:
+  timeout_minutes: 30
+  fail_fast: false
+  exclude_combinations: []
+  special_apps: []
