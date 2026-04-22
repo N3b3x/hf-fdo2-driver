@@ -1,29 +1,64 @@
-# hf-fdo2-driver
+---
+layout: default
+title: "HardFOC FDO2-G2 Driver"
+description: "Hardware-agnostic C++17 UART client for PyroScience FDO2-G2 optical oxygen sensors"
+nav_order: 1
+permalink: /
+---
 
-Hardware-agnostic **C++17** UART client for the **PyroScience FDO2-G2** optical
-oxygen sensor (**data sheet v5, §4**): `#VERS`, `#IDNR`, `#MOXY`, `#MRAW`, `#LOGO`,
-with scaling and status bits matching the published command tables. Default UART
-baud is **19200** after power-up. The code is header-only: link it from CMake as
-`hf::fdo2` or use the ESP-IDF component wrapper under `examples/esp32/components/hf_fdo2`.
+# HF-FDO2 Driver
 
+**Header-only C++17 UART client for the PyroScience FDO2-G2 optical oxygen sensor**
+(data sheet **v5**, **§4** UART API): `#VERS`, `#IDNR`, `#MOXY`, `#MRAW`, `#LOGO`,
+with engineering-unit decoding, optional **CRC** suffix stripping, and `#ERRO`
+codes via `LastDeviceErrorCode()`. Default baud after power-up is **19200** 8N1.
+
+[![C++](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.cppreference.com/w/cpp/17)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/N3b3x/hf-FDO2-driver/actions/workflows/esp32-examples-build-ci.yml/badge.svg?branch=main)](https://github.com/N3b3x/hf-FDO2-driver/actions/workflows/esp32-examples-build-ci.yml)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://n3b3x.github.io/hf-FDO2-driver/)
+
+## Table of contents
+
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Quick start](#quick-start)
+4. [Documentation](#documentation)
+5. [Examples](#examples)
+6. [Official references](#official-references)
+7. [License](#license)
+
+## Overview
+
+> **[Live documentation (GitHub Pages)](https://n3b3x.github.io/hf-FDO2-driver/)** —
+> Installation, UART protocol tables, CMake, API summary, and troubleshooting.
+
+The driver targets **read-only measurement** commands suitable for host firmware:
+fast **`#MOXY`** for control loops and richer **`#MRAW`** when you need vent-side
+pressure **P**, internal RH **H**, dphi, and intensities. Flash-writing commands
+(`#CALO`, `#CAHI`, `#CRCE`, `#SETM`, `#BAUD`, …) are intentionally **not**
+implemented here (endurance and power-stability constraints in the data sheet).
 
 ## Features
 
-- CRTP `fdo2::UartInterface<Derived>` — zero virtual calls; bring your own UART.
-- `fdo2::Driver<UartT>` — `#VERS`, `#IDNR`, `#MOXY` (fast pO₂ + T + status), `#MRAW`
-  (adds dphi, intensities, vent-side pressure, internal RH), `#LOGO`; optional
-  **CRC suffix** stripping; `#ERRO` code via `LastDeviceErrorCode()`.
-- No heap allocation in the driver paths; suitable for FreeRTOS / bare metal.
-- ESP32-S3 **UART1** example (`GPIO17` / `GPIO18`, **`19200` 8N1**, ~1.1 s boot delay)
-  under `examples/esp32/`.
+- **CRTP** `fdo2::UartInterface<Derived>` — no virtual calls; you provide `write` /
+  `read` / `flush_rx`.
+- **`fdo2::Driver<UartT>`** — `ReadVersion`, `ReadUniqueId`, `MeasureMoxy`,
+  `MeasureMraw`, `FlashLogo`; timeouts configurable per command class.
+- **No heap allocation** in the driver framing path; fits FreeRTOS / bare metal.
+- **ESP32-S3** example: UART1, GPIO17/18, **19200** 8N1, ~1.1 s post-power delay —
+  see `examples/esp32/`.
 
-## Quick start (CMake consumer)
+## Quick start
+
+CMake:
 
 ```cmake
 add_subdirectory(/path/to/hf-fdo2-driver)
 target_link_libraries(your_target PRIVATE hf::fdo2)
 ```
+
+Application:
 
 ```cpp
 #include "fdo2.hpp"
@@ -37,21 +72,29 @@ struct MyUart : fdo2::UartInterface<MyUart> {
 MyUart uart;
 fdo2::Driver<MyUart> dev(uart);
 auto v = dev.ReadVersion();
-auto m = dev.MeasureMraw();  // or dev.MeasureMoxy() for smallest frame
+auto m = dev.MeasureMraw();  // or MeasureMoxy() for smallest frame
 ```
 
 ## Documentation
 
-- **Protocol overview:** [`docs/protocol.md`](docs/protocol.md)  
-- **Doxygen:** configure `_config/Doxyfile`, then run `doxygen` from `_config/`.  
-- **ESP32 workflow:** [`examples/esp32/README.md`](examples/esp32/README.md)
+| Topic | Link |
+|--------|------|
+| Doc hub | [docs/index.md](docs/index.md) |
+| UART protocol | [docs/uart_protocol.md](docs/uart_protocol.md) |
+| API / CMake / hardware | [docs/](docs/) |
+| Doxygen | `_config/Doxyfile` → run `doxygen _config/Doxyfile` from repo root |
+
+## Examples
+
+- **ESP32 workflow:** [examples/esp32/README.md](examples/esp32/README.md)
+- **Build script:** `examples/esp32/scripts/build_app.sh`
 
 ## Official references
 
-Use the **FDO2-G2 data sheet** (and firmware release notes) for accuracy, timing,
-calibration (`#CALO` / `#CAHI`), `#SETM` modes, broadcast `#BCST`, and flash-lifetime
-limits. Other PyroScience instruments may use different UART command sets.
+Use the **FDO2-G2** data sheet and firmware notes for calibration, measurement
+modes, broadcast, and flash lifetime. Other PyroScience products may use
+different UART command sets.
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
+MIT — see [LICENSE](LICENSE).
