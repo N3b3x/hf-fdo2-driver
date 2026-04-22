@@ -36,7 +36,8 @@ Desktop.ini
 .venv/
 venv/
 
-# Compiled
+# Compiled / tooling
+*.d
 *.o
 *.a
 *.so
