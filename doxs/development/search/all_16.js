@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['s_20strong_20not_200_20or_201_0',['Status &lt;strong&gt;S&lt;/strong&gt; not 0 or 1',['../md_docs_2troubleshooting.html#autotoc_md50',1,'']]],
+  ['s3_20shipped_20examples_20default_1',['ESP32-S3 shipped examples (default)',['../md_docs_2hardware__setup.html#autotoc_md26',1,'']]],
+  ['s3_20tt_20examples_20esp32_20tt_2',['ESP32-S3 (&lt;tt&gt;examples/esp32&lt;/tt&gt;)',['../md_docs_2examples.html#autotoc_md20',1,'']]],
+  ['scope_20in_20this_20driver_3',['Out of scope in this driver',['../md_docs_2uart__protocol.html#autotoc_md58',1,'']]],
+  ['sensor_5ftypes_4',['sensor_types',['../structfdo2_1_1VersionInfo.html#a5cb6e3e3b5e2605ea18ed5012ee9f274',1,'fdo2::VersionInfo']]],
+  ['setlinetimeoutms_5',['SetLineTimeoutMs',['../classfdo2_1_1Driver.html#a407d9dcd8be65d43c6510f12ecf8a570',1,'fdo2::Driver']]],
+  ['setmeasuretimeoutms_6',['SetMeasureTimeoutMs',['../classfdo2_1_1Driver.html#ac7c5cb1beda0c1d400792232d28269db',1,'fdo2::Driver']]],
+  ['setslowcommandtimeoutms_7',['SetSlowCommandTimeoutMs',['../classfdo2_1_1Driver.html#abfd9788f570d150c956c32e5cf9d5a71',1,'fdo2::Driver']]],
+  ['setup_8',['Hardware setup',['../md_docs_2hardware__setup.html',1,'']]],
+  ['shipped_20examples_20default_9',['ESP32-S3 shipped examples (default)',['../md_docs_2hardware__setup.html#autotoc_md26',1,'']]],
+  ['signal_5fintensity_5fmv_10',['signal_intensity_mv',['../structfdo2_1_1MrawReading.html#a61d95787da3a3faf2006fd62c827a09d',1,'fdo2::MrawReading']]],
+  ['sketch_11',['2. Minimal adapter (sketch)',['../md_docs_2quickstart.html#autotoc_md43',1,'']]],
+  ['skipws_12',['SkipWs',['../namespacefdo2_1_1detail.html#a2d16c75fcb5f085daeaa0c8db2a3bc11',1,'fdo2::detail']]],
+  ['standalone_20consumer_13',['Standalone consumer',['../md_docs_2cmake__integration.html#autotoc_md15',1,'']]],
+  ['start_14',['Quick start',['../md_docs_2quickstart.html',1,'']]],
+  ['start_15',['Quick start',['../index.html#autotoc_md4',1,'']]],
+  ['started_16',['Getting started',['../md_docs_2index.html#autotoc_md30',1,'']]],
+  ['status_20strong_20s_20strong_20not_200_20or_201_17',['Status &lt;strong&gt;S&lt;/strong&gt; not 0 or 1',['../md_docs_2troubleshooting.html#autotoc_md50',1,'']]],
+  ['status_5fu32_18',['status_u32',['../structfdo2_1_1MoxyReading.html#a1470052ad467163cb745cd381e89d1a6',1,'fdo2::MoxyReading']]],
+  ['stripoptionalmodbuscrcsuffix_19',['StripOptionalModbusCrcSuffix',['../namespacefdo2_1_1detail.html#aa8bb0518000d7968ef55b53b050c96a8',1,'fdo2::detail']]],
+  ['strong_20s_20strong_20not_200_20or_201_20',['Status &lt;strong&gt;S&lt;/strong&gt; not 0 or 1',['../md_docs_2troubleshooting.html#autotoc_md50',1,'']]],
+  ['structure_21',['Documentation structure',['../md_docs_2index.html#autotoc_md29',1,'']]],
+  ['submodule_20recommended_22',['Submodule (recommended)',['../md_docs_2installation.html#autotoc_md38',1,'']]],
+  ['success_23',['success',['../structfdo2_1_1DriverResult.html#a7a081b2e4385968347763430bb022eaf',1,'fdo2::DriverResult::success()'],['../structfdo2_1_1DriverResult_3_01void_01_4.html#a1ed916b478349f2527c360bb1a86c1ae',1,'fdo2::DriverResult&lt; void &gt;::success()']]]
+];
