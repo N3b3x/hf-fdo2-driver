@@ -17,21 +17,25 @@ permalink: /docs/examples/
    git submodule update --init --recursive
    ```
 
-2. Build (default app `fdo2_minimal_example`, ESP-IDF `release/v5.5`, target `esp32s3`):
+2. Build (ESP-IDF `release/v5.5`, target `esp32s3` from `app_config.yml`):
 
    ```bash
    ./scripts/build_app.sh fdo2_minimal_example Debug
+   ./scripts/build_app.sh fdo2_sensor_demo Debug
    ```
 
 3. Flash and monitor:
 
    ```bash
    ./scripts/flash_app.sh flash_monitor fdo2_minimal_example Debug
+   ./scripts/flash_app.sh flash_monitor fdo2_sensor_demo Debug
    ```
 
-The minimal example uses **UART1**, **GPIO17** / **GPIO18**, **19200 baud**, waits
-for the module boot window, then prints `#VERS`, `#IDNR`, and periodic `#MRAW`
-with decoded engineering units.
+Both apps use **`UART_NUM_1`** with default pins **TX = GPIO47**, **RX = GPIO21**
+(see `main/include/hf_fdo2_esp_uart.hpp` and the `using Uart = …` alias in each
+`.cpp`). **`fdo2_minimal_example`** prints `#VERS`, `#IDNR`, and 1 Hz `#MRAW`.
+**`fdo2_sensor_demo`** runs **200 ms** `#MOXY` plus **3 s** `#MRAW` for bench O₂
+testing.
 
 See [`examples/esp32/README.md`](https://github.com/N3b3x/hf-FDO2-driver/blob/main/examples/esp32/README.md) for matrix and override notes.
 

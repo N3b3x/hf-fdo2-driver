@@ -37,6 +37,13 @@ commands. The ESP32 example waits `kFdo2G2PowerUpSettleMs` (~1100 ms) before `#V
 The data sheet references **Molex 560020-0420** for the module harness. Route
 TX/RX/GND only after confirming pinout for your cable revision.
 
+## ESP32-S3 shipped examples (default)
+
+The `examples/esp32` apps map **MCU TX → sensor RX** and **MCU RX ← sensor TX**
+on **`UART_NUM_1`**: **GPIO47** (TX), **GPIO21** (RX), **19200** 8N1. Change the
+template parameters on the `Fdo2EspIdfUart<…>` type alias if your board uses
+different pins.
+
 ## Fast versus verbose reads
 
 - **`#MOXY`** — smallest response; ideal for **high-rate control loops**.

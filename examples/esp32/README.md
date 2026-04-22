@@ -1,8 +1,7 @@
-# ESP32 examples — HF-FDO2 (PyroScience PSUP)
+# ESP32 examples — HF-FDO2 (PyroScience FDO2-G2)
 
-These projects demonstrate the header-only driver against a **FDO2-G2** (or
-compatible UART command set per data sheet v5 §4) using **ESP-IDF** on ESP32-S3.
-Default link is **19200 baud** after power-up.
+ESP-IDF examples for the **FDO2-G2** UART API (**data sheet v5 §4**). Factory
+default after power-up is **19200 baud**, 8N1.
 
 ## Prerequisites
 
@@ -17,22 +16,59 @@ From `examples/esp32/`:
 git submodule update --init --recursive
 ```
 
-This pulls `scripts/` (`hf-espidf-project-tools`) with `build_app.sh`,
-`flash_app.sh`, and the CI matrix generator.
+This pulls `scripts/` (**hf-espidf-project-tools**): `build_app.sh`, `flash_app.sh`,
+and `generate_matrix.py` (same layout as other `hf-*-driver` submodules).
+
+## Default wiring (ESP32-S3)
+
+Examples use **`UART_NUM_1`** so **`UART_NUM_0`** stays available for the USB
+serial console on typical devkits:
+
+| MCU signal | GPIO (default) | Sensor / cable |
+|------------|------------------|----------------|
+| TX         | **47**           | module RX      |
+| RX         | **21**           | module TX      |
+| GND        | GND              | GND            |
+
+If your harness swaps TX/RX, swap the two GPIO numbers in
+`main/include/hf_fdo2_esp_uart.hpp` usage (the `using Uart = Fdo2EspIdfUart<...>`
+alias) or change the template parameters in the `.cpp` file.
+
+## Apps (`app_config.yml`)
+
+| App | Role |
+|-----|------|
+| `fdo2_minimal_example` | Smallest bring-up: `#VERS`, `#IDNR`, 1 Hz `#MRAW` |
+| `fdo2_sensor_demo` | Practical test: **200 ms** `#MOXY` + **3 s** `#MRAW` |
+
+List matrix:
+
+```bash
+./scripts/build_app.sh list
+```
 
 ## Build / flash
 
 ```bash
 cd examples/esp32
 ./scripts/build_app.sh fdo2_minimal_example Debug
-./scripts/flash_app.sh fdo2_minimal_example Debug
+./scripts/flash_app.sh flash_monitor fdo2_minimal_example Debug
 ```
 
-Override UART pins or baud in `main/fdo2_minimal_example.cpp` to match your
-carrier board and the module datasheet.
+Sensor demo (recommended for bench O₂ testing):
+
+```bash
+./scripts/build_app.sh fdo2_sensor_demo Debug
+./scripts/flash_app.sh flash_monitor fdo2_sensor_demo Debug
+```
+
+## Transport layer
+
+Shared header: **`main/include/hf_fdo2_esp_uart.hpp`** — template
+`hf_fdo2_examples::Fdo2EspIdfUart<PORT, TX_GPIO, RX_GPIO, BAUD>` implementing
+`fdo2::UartInterface<>` for `fdo2::Driver` with **zero virtual calls**.
 
 ## Protocol reference
 
-Official PSUP documentation is published by PyroScience (firmware 4.x), e.g.
-“PyroScience Unified Protocol” reference manuals on their OEM downloads page.
-The driver maps `MEA` result integers per §2.9 Results registers.
+Use the **FDO2-G2** data sheet (v5) §4 as the authority. In-repo docs:
+[`../../docs/uart_protocol.md`](../../docs/uart_protocol.md).

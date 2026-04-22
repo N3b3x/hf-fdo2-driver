@@ -46,8 +46,9 @@ implemented here (endurance and power-stability constraints in the data sheet).
 - **`fdo2::Driver<UartT>`** — `ReadVersion`, `ReadUniqueId`, `MeasureMoxy`,
   `MeasureMraw`, `FlashLogo`; timeouts configurable per command class.
 - **No heap allocation** in the driver framing path; fits FreeRTOS / bare metal.
-- **ESP32-S3** example: UART1, GPIO17/18, **19200** 8N1, ~1.1 s post-power delay —
-  see `examples/esp32/`.
+- **ESP32-S3** examples (`build_app.sh` matrix): **UART1**, default **TX=GPIO47** /
+  **RX=GPIO21**, **19200** 8N1, shared template `Fdo2EspIdfUart` — see
+  `examples/esp32/`.
 
 ## Quick start
 

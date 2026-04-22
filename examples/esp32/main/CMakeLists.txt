@@ -23,6 +23,7 @@ set(INC_BASE_PATH "../../../inc")
 
 set(MAIN_INCLUDE_DIRS
     "."
+    "include"
     "${INC_BASE_PATH}"
 )
 
