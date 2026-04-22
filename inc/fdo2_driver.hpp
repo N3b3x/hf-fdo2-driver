@@ -1,14 +1,15 @@
 /**
  * @file fdo2_driver.hpp
- * @brief PyroScience Unified Protocol (PSUP) UART client for optical oxygen modules.
+ * @brief FDO2-G2 UART command client (PyroScience data sheet v5, §4).
  *
- * @details This driver targets firmware-generation 4.x devices that speak PSUP over
- *          a 3.3 V UART (8 data bits, 1 stop bit, no parity). Typical products
- *          include FDO2-G2, FD-OEM-O2, and PICO-O2; always confirm baud rate and
- *          wiring against the module datasheet.
+ * @details Implements the **FDO2-G2** command set: `#VERS`, `#IDNR`, `#MOXY`,
+ *          `#MRAW`, `#LOGO`. Lines are ASCII, terminated with `\\r` (optional
+ *          `\\n` after `\\r` per §4.1). If optional CRC is enabled (`#CRCE 1`),
+ *          responses end with ` : C` before `\\r`; this implementation strips
+ *          that suffix before parsing.
  *
- *          Public entry points are allocation-free and suitable for bare-metal /
- *          FreeRTOS use. Serialize all calls if multiple tasks share one UART.
+ *          Default UART is **19200** 8N1 after power-up; allow ~1 s settle time
+ *          before the first transaction.
  *
  * @copyright Copyright (c) 2026 HardFOC. All rights reserved.
  */
@@ -21,6 +22,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string_view>
 
 namespace fdo2 {
 namespace detail {
@@ -30,9 +32,31 @@ inline bool AppendCmd(char* buf, std::size_t cap, std::string_view cmd) noexcept
         return false;
     }
     std::memcpy(buf, cmd.data(), cmd.size());
-    buf[cmd.size()]     = '\r';
+    buf[cmd.size()]      = '\r';
     buf[cmd.size() + 1U] = '\0';
     return true;
+}
+
+/// If CRC is enabled, response is `... : <decimal>\\r`. Strip from last `" :"`.
+inline void StripOptionalModbusCrcSuffix(char* line) noexcept {
+    if (line == nullptr || line[0] == '\0') {
+        return;
+    }
+    char* colon = std::strrchr(line, ':');
+    if (colon == nullptr || colon <= line + 1) {
+        return;
+    }
+    if (colon[-1] != ' ') {
+        return;
+    }
+    const char* p = colon + 1;
+    while (*p != '\0') {
+        if (std::isdigit(static_cast<unsigned char>(*p)) == 0) {
+            return;
+        }
+        ++p;
+    }
+    colon[-1] = '\0';
 }
 
 template <typename UartT>
@@ -62,6 +86,7 @@ inline DriverError ReadAsciiLine(UartT& uart, char* buf, std::size_t cap,
         buf[pos++] = c;
     }
     buf[pos] = '\0';
+    StripOptionalModbusCrcSuffix(buf);
     return DriverError::None;
 }
 
@@ -123,6 +148,15 @@ inline int32_t ParseI32(const char* s, bool* ok) noexcept {
     return static_cast<int32_t>(v);
 }
 
+inline uint32_t ParseU32(const char* s, bool* ok) noexcept {
+    char* end = nullptr;
+    const unsigned long v = std::strtoul(s, &end, 10);
+    if (ok != nullptr) {
+        *ok = (end != s) && (*end == '\0');
+    }
+    return static_cast<uint32_t>(v);
+}
+
 inline uint64_t ParseU64(const char* s, bool* ok) noexcept {
     char* end = nullptr;
     const unsigned long long v = std::strtoull(s, &end, 10);
@@ -132,10 +166,14 @@ inline uint64_t ParseU64(const char* s, bool* ok) noexcept {
     return static_cast<uint64_t>(v);
 }
 
+inline bool IsErroHeader(const char* tok0) noexcept {
+    return std::strncmp(tok0, "#ERRO", 5) == 0;
+}
+
 }  // namespace detail
 
 /**
- * @brief PSUP client bound to one UART adapter.
+ * @brief FDO2-G2 UART client.
  * @tparam UartT Concrete type inheriting `UartInterface<UartT>`.
  */
 template <typename UartT>
@@ -144,45 +182,42 @@ public:
     explicit Driver(UartT& uart) noexcept : uart_(uart) {}
 
     void SetLineTimeoutMs(uint32_t ms) noexcept { line_timeout_ms_ = ms; }
-    void SetMeaTimeoutMs(uint32_t ms) noexcept { mea_timeout_ms_ = ms; }
+    void SetMeasureTimeoutMs(uint32_t ms) noexcept { measure_timeout_ms_ = ms; }
+    void SetSlowCommandTimeoutMs(uint32_t ms) noexcept { slow_timeout_ms_ = ms; }
 
     uint32_t GetLineTimeoutMs() const noexcept { return line_timeout_ms_; }
-    uint32_t GetMeaTimeoutMs() const noexcept { return mea_timeout_ms_; }
+    uint32_t GetMeasureTimeoutMs() const noexcept { return measure_timeout_ms_; }
+    int32_t  LastDeviceErrorCode() const noexcept { return last_device_error_; }
 
     DriverResult<VersionInfo> ReadVersion() noexcept {
+        last_device_error_ = 0;
         char tx[16];
         if (!detail::AppendCmd(tx, sizeof(tx), "#VERS")) {
             return DriverResult<VersionInfo>::failure(DriverError::InvalidParameter);
         }
-        char line[256];
+        char line[160];
         const auto err = TransactLine(tx, line, sizeof(line));
         if (err != DriverError::None) {
             return DriverResult<VersionInfo>::failure(err);
         }
-        char tstore[192];
-        const char* tok[16];
+        char tstore[128];
+        const char* tok[8];
         std::size_t nt = 0;
-        if (detail::Tokenize(line, tstore, sizeof(tstore), tok, 16, &nt) != DriverError::None ||
-            nt < 7) {
+        if (detail::Tokenize(line, tstore, sizeof(tstore), tok, 8, &nt) != DriverError::None) {
             return DriverResult<VersionInfo>::failure(DriverError::ProtocolError);
         }
-        if (std::strncmp(tok[0], "#VERS", 5) != 0) {
-            if (std::strncmp(tok[0], "#ERRO", 5) == 0) {
-                return DriverResult<VersionInfo>::failure(DriverError::DeviceError);
-            }
+        if (nt >= 2 && detail::IsErroHeader(tok[0])) {
+            return FailErro<VersionInfo>(tok, nt);
+        }
+        if (nt < 5U || std::strncmp(tok[0], "#VERS", 5) != 0) {
             return DriverResult<VersionInfo>::failure(DriverError::ProtocolError);
         }
-        VersionInfo v{};
         bool ok = true;
-        v.device_id        = detail::ParseI32(tok[1], &ok);
-        if (!ok) {
-            return DriverResult<VersionInfo>::failure(DriverError::ProtocolError);
-        }
-        v.num_channels     = detail::ParseI32(tok[2], &ok);
-        v.firmware_version = detail::ParseI32(tok[3], &ok);
-        v.sensor_types     = detail::ParseI32(tok[4], &ok);
-        v.build_number     = detail::ParseI32(tok[5], &ok);
-        v.features         = detail::ParseI32(tok[6], &ok);
+        VersionInfo v{};
+        v.device_id          = detail::ParseI32(tok[1], &ok);
+        v.num_channels       = detail::ParseI32(tok[2], &ok);
+        v.firmware_revision  = detail::ParseI32(tok[3], &ok);
+        v.sensor_types       = detail::ParseI32(tok[4], &ok);
         if (!ok) {
             return DriverResult<VersionInfo>::failure(DriverError::ProtocolError);
         }
@@ -190,26 +225,26 @@ public:
     }
 
     DriverResult<uint64_t> ReadUniqueId() noexcept {
+        last_device_error_ = 0;
         char tx[16];
         if (!detail::AppendCmd(tx, sizeof(tx), "#IDNR")) {
             return DriverResult<uint64_t>::failure(DriverError::InvalidParameter);
         }
-        char line[128];
+        char line[96];
         const auto err = TransactLine(tx, line, sizeof(line));
         if (err != DriverError::None) {
             return DriverResult<uint64_t>::failure(err);
         }
-        char tstore[160];
+        char tstore[128];
         const char* tok[8];
         std::size_t nt = 0;
-        if (detail::Tokenize(line, tstore, sizeof(tstore), tok, 8, &nt) != DriverError::None ||
-            nt < 2) {
+        if (detail::Tokenize(line, tstore, sizeof(tstore), tok, 8, &nt) != DriverError::None) {
             return DriverResult<uint64_t>::failure(DriverError::ProtocolError);
         }
-        if (std::strncmp(tok[0], "#IDNR", 5) != 0) {
-            if (std::strncmp(tok[0], "#ERRO", 5) == 0) {
-                return DriverResult<uint64_t>::failure(DriverError::DeviceError);
-            }
+        if (nt >= 2 && detail::IsErroHeader(tok[0])) {
+            return FailErro<uint64_t>(tok, nt);
+        }
+        if (nt != 2U || std::strncmp(tok[0], "#IDNR", 5) != 0) {
             return DriverResult<uint64_t>::failure(DriverError::ProtocolError);
         }
         bool ok = false;
@@ -220,73 +255,125 @@ public:
         return DriverResult<uint64_t>::success(id);
     }
 
-    DriverResult<void> PowerUpSensors() noexcept { return SimpleDeviceCommand("#PWUP"); }
-    DriverResult<void> PowerDownSensors() noexcept { return SimpleDeviceCommand("#PDWN"); }
-
-    DriverResult<Measurement> TriggerMeasurement(uint8_t channel = 1,
-                                                 uint32_t sensor_mask = kDefaultMeaSensorMask,
-                                                 uint32_t timeout_ms = 0U) noexcept {
-        if (channel == 0U) {
-            return DriverResult<Measurement>::failure(DriverError::InvalidParameter);
+    /// Single oxygen + temperature + status round-trip (typically &lt; ~150 ms for M=2).
+    DriverResult<MoxyReading> MeasureMoxy(uint32_t timeout_ms = 0U) noexcept {
+        last_device_error_ = 0;
+        char tx[12];
+        if (!detail::AppendCmd(tx, sizeof(tx), "#MOXY")) {
+            return DriverResult<MoxyReading>::failure(DriverError::InvalidParameter);
         }
-        char tx[48];
-        const int n = std::snprintf(tx, sizeof(tx), "MEA %u %lu\r", static_cast<unsigned>(channel),
-                                    static_cast<unsigned long>(sensor_mask));
-        if (n <= 0 || static_cast<std::size_t>(n) >= sizeof(tx)) {
-            return DriverResult<Measurement>::failure(DriverError::InvalidParameter);
-        }
-        char line[640];
-        const uint32_t tmo = (timeout_ms != 0U) ? timeout_ms : mea_timeout_ms_;
-        const auto err     = TransactLine(tx, line, sizeof(line), tmo);
+        char line[96];
+        const uint32_t tmo = (timeout_ms != 0U) ? timeout_ms : measure_timeout_ms_;
+        const auto err       = TransactLine(tx, line, sizeof(line), tmo);
         if (err != DriverError::None) {
-            return DriverResult<Measurement>::failure(err);
+            return DriverResult<MoxyReading>::failure(err);
         }
-        char tstore[512];
-        const char* tok[32];
+        char tstore[128];
+        const char* tok[8];
         std::size_t nt = 0;
-        if (detail::Tokenize(line, tstore, sizeof(tstore), tok, 32, &nt) != DriverError::None ||
-            nt < 3U + 18U) {
-            return DriverResult<Measurement>::failure(DriverError::ProtocolError);
+        if (detail::Tokenize(line, tstore, sizeof(tstore), tok, 8, &nt) != DriverError::None) {
+            return DriverResult<MoxyReading>::failure(DriverError::ProtocolError);
         }
-        if (std::strncmp(tok[0], "MEA", 3) != 0) {
-            if (std::strncmp(tok[0], "#ERRO", 5) == 0) {
-                return DriverResult<Measurement>::failure(DriverError::DeviceError);
-            }
-            return DriverResult<Measurement>::failure(DriverError::ProtocolError);
+        if (nt >= 2 && detail::IsErroHeader(tok[0])) {
+            return FailErro<MoxyReading>(tok, nt);
         }
-        MeasurementRaw raw{};
-        for (int i = 0; i < 18; ++i) {
-            bool ok = false;
-            raw.reg[static_cast<std::size_t>(i)] = detail::ParseI32(tok[3U + static_cast<std::size_t>(i)], &ok);
-            if (!ok) {
-                return DriverResult<Measurement>::failure(DriverError::ProtocolError);
-            }
+        if (nt != 4U || std::strncmp(tok[0], "#MOXY", 5) != 0) {
+            return DriverResult<MoxyReading>::failure(DriverError::ProtocolError);
         }
-        return DriverResult<Measurement>::success(DecodeMeasurement(raw));
+        bool ok = true;
+        const int32_t o = detail::ParseI32(tok[1], &ok);
+        const int32_t t = detail::ParseI32(tok[2], &ok);
+        const uint32_t s = detail::ParseU32(tok[3], &ok);
+        if (!ok) {
+            return DriverResult<MoxyReading>::failure(DriverError::ProtocolError);
+        }
+        return DriverResult<MoxyReading>::success(DecodeMoxy(o, t, s));
+    }
+
+    /// Same measurement plus raw optics / vent-path pressure / internal RH.
+    DriverResult<MrawReading> MeasureMraw(uint32_t timeout_ms = 0U) noexcept {
+        last_device_error_ = 0;
+        char tx[12];
+        if (!detail::AppendCmd(tx, sizeof(tx), "#MRAW")) {
+            return DriverResult<MrawReading>::failure(DriverError::InvalidParameter);
+        }
+        char line[192];
+        const uint32_t tmo = (timeout_ms != 0U) ? timeout_ms : measure_timeout_ms_;
+        const auto err       = TransactLine(tx, line, sizeof(line), tmo);
+        if (err != DriverError::None) {
+            return DriverResult<MrawReading>::failure(err);
+        }
+        char tstore[256];
+        const char* tok[16];
+        std::size_t nt = 0;
+        if (detail::Tokenize(line, tstore, sizeof(tstore), tok, 16, &nt) != DriverError::None) {
+            return DriverResult<MrawReading>::failure(DriverError::ProtocolError);
+        }
+        if (nt >= 2 && detail::IsErroHeader(tok[0])) {
+            return FailErro<MrawReading>(tok, nt);
+        }
+        if (nt != 9U || std::strncmp(tok[0], "#MRAW", 5) != 0) {
+            return DriverResult<MrawReading>::failure(DriverError::ProtocolError);
+        }
+        bool ok = true;
+        const int32_t o = detail::ParseI32(tok[1], &ok);
+        const int32_t t = detail::ParseI32(tok[2], &ok);
+        const uint32_t s = detail::ParseU32(tok[3], &ok);
+        const int32_t d = detail::ParseI32(tok[4], &ok);
+        const int32_t i = detail::ParseI32(tok[5], &ok);
+        const int32_t a = detail::ParseI32(tok[6], &ok);
+        const int32_t p = detail::ParseI32(tok[7], &ok);
+        const int32_t h = detail::ParseI32(tok[8], &ok);
+        if (!ok) {
+            return DriverResult<MrawReading>::failure(DriverError::ProtocolError);
+        }
+        return DriverResult<MrawReading>::success(DecodeMraw(o, t, s, d, i, a, p, h));
+    }
+
+    /// Flash the status LED (identification).
+    DriverResult<void> FlashLogo() noexcept {
+        last_device_error_ = 0;
+        return SimpleEchoCommand("#LOGO", 5);
     }
 
 private:
-    DriverResult<void> SimpleDeviceCommand(std::string_view cmd) noexcept {
-        char tx[24];
-        if (!detail::AppendCmd(tx, sizeof(tx), cmd)) {
+    template <typename T>
+    DriverResult<T> FailErro(const char* tok[], std::size_t nt) noexcept {
+        if (nt >= 2) {
+            bool ok = false;
+            last_device_error_ = detail::ParseI32(tok[1], &ok);
+            if (!ok) {
+                last_device_error_ = -1;
+            }
+        } else {
+            last_device_error_ = -1;
+        }
+        return DriverResult<T>::failure(DriverError::DeviceError);
+    }
+
+    DriverResult<void> SimpleEchoCommand(const char* cmd, std::size_t cmd_len) noexcept {
+        char tx[16];
+        if (cmd_len + 2U > sizeof(tx)) {
             return DriverResult<void>::failure(DriverError::InvalidParameter);
         }
-        char line[64];
-        const auto err = TransactLine(tx, line, sizeof(line));
+        char line[32];
+        std::memcpy(tx, cmd, cmd_len);
+        tx[cmd_len]     = '\r';
+        tx[cmd_len + 1] = '\0';
+        const auto err = TransactLine(tx, line, sizeof(line), line_timeout_ms_);
         if (err != DriverError::None) {
             return DriverResult<void>::failure(err);
         }
-        char tstore[64];
+        char tstore[48];
         const char* tok[4];
         std::size_t nt = 0;
-        if (detail::Tokenize(line, tstore, sizeof(tstore), tok, 4, &nt) != DriverError::None ||
-            nt < 1) {
+        if (detail::Tokenize(line, tstore, sizeof(tstore), tok, 4, &nt) != DriverError::None) {
             return DriverResult<void>::failure(DriverError::ProtocolError);
         }
-        if (std::strncmp(tok[0], cmd.data(), cmd.size()) != 0) {
-            if (std::strncmp(tok[0], "#ERRO", 5) == 0) {
-                return DriverResult<void>::failure(DriverError::DeviceError);
-            }
+        if (nt >= 2 && detail::IsErroHeader(tok[0])) {
+            return FailErro<void>(tok, nt);
+        }
+        if (nt < 1U || std::strncmp(tok[0], cmd, cmd_len) != 0) {
             return DriverResult<void>::failure(DriverError::ProtocolError);
         }
         return DriverResult<void>::success();
@@ -301,8 +388,10 @@ private:
     }
 
     UartT&   uart_;
-    uint32_t line_timeout_ms_{250};
-    uint32_t mea_timeout_ms_{3000};
+    uint32_t line_timeout_ms_{400};
+    uint32_t measure_timeout_ms_{250};
+    uint32_t slow_timeout_ms_{12000};
+    int32_t  last_device_error_{0};
 };
 
 }  // namespace fdo2

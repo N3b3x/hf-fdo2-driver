@@ -1,11 +1,11 @@
 /**
  * @file fdo2.hpp
- * @brief Umbrella header for the HF-FDO2 / PyroScience PSUP UART driver.
+ * @brief Umbrella header for the HF-FDO2 (FDO2-G2) UART driver.
  *
- * @details Include this header to pull in the UART transport interface, typed
- *          results, and `fdo2::Driver<UartT>`. See `fdo2_driver.hpp` for API
- *          documentation and `examples/esp32/` for a ready-made ESP-IDF UART
- *          adapter.
+ * @details Pulls in `fdo2::UartInterface`, typed readings (`MoxyReading`,
+ *          `MrawReading`, `VersionInfo`), and `fdo2::Driver<UartT>` implementing
+ *          the FDO2-G2 data sheet §4 command set. See `examples/esp32/` for an
+ *          ESP-IDF UART adapter (default **19200** baud).
  *
  * @copyright Copyright (c) 2026 HardFOC. All rights reserved.
  */

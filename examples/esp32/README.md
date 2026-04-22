@@ -1,8 +1,8 @@
 # ESP32 examples — HF-FDO2 (PyroScience PSUP)
 
-These projects demonstrate the header-only driver against a UART-connected
-PyroScience module (for example FDO2-G2 / FD-OEM-O2 family) using **ESP-IDF**
-on ESP32-S3.
+These projects demonstrate the header-only driver against a **FDO2-G2** (or
+compatible UART command set per data sheet v5 §4) using **ESP-IDF** on ESP32-S3.
+Default link is **19200 baud** after power-up.
 
 ## Prerequisites
 

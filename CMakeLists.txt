@@ -1,8 +1,8 @@
 # =============================================================================
 # hf-fdo2-driver — Root CMakeLists.txt
 # =============================================================================
-# Hardware-agnostic header-only driver for PyroScience Unified Protocol (PSUP)
-# over UART (optical oxygen modules such as FDO2-G2, FD-OEM-O2, PICO-O2).
+# Hardware-agnostic header-only UART driver for PyroScience FDO2-G2 (data sheet
+# v5 §4: #VERS, #MOXY, #MRAW, …).
 # Integrate via cmake/hf_fdo2_build_settings.cmake or the ESP-IDF component
 # under examples/esp32/components/hf_fdo2.
 # =============================================================================

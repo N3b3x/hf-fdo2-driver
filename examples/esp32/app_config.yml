@@ -11,7 +11,7 @@ metadata:
 
 apps:
   fdo2_minimal_example:
-    description: "Minimal PSUP loop: #VERS, #IDNR, periodic MEA on UART1"
+    description: "FDO2-G2 data sheet §4: #VERS, #IDNR, periodic #MRAW on UART1 @19200"
     source_file: "fdo2_minimal_example.cpp"
     category: "example"
     idf_versions: ["release/v5.5"]
@@ -20,8 +20,8 @@ apps:
     featured: true
     hardware_required: true
     features:
-      - "CRTP UART adapter (8N1)"
-      - "Decode O2 / pO2 / sample temperature from MEA"
+      - "CRTP UART adapter (8N1, default 19200 baud)"
+      - "Decode #MRAW O T S D I A P H per data sheet v5"
 
 build_config:
   build_types:

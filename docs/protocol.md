@@ -1,30 +1,55 @@
-# PyroScience Unified Protocol (PSUP) — integration notes
+# FDO2-G2 UART protocol (data sheet alignment)
 
-This repository implements a **small, host-side subset** of PSUP firmware
-generation **4.x** over UART:
+This driver follows **PyroScience FDO2-G2**, document version **v5 (03/2026)**,
+**§4 Communication Interface**.
 
-- `#VERS` — device type, channel count, firmware revision  
-- `#IDNR` — 64-bit unique id  
-- `#PWUP` / `#PDWN` — sensor power rails  
-- `MEA C S` — trigger acquisition and return the 18 signed **Results** registers
+## Electrical / framing
 
-Messages are **ASCII**, tokens separated by spaces, each frame terminated with
-**carriage return** (`\r`, `0x0D`).
+- **3.0 V UART levels** (max 3.3 V on IO).
+- **8N1**, no handshake.
+- **Default baud after power-up: 19200** (also 1200 … 115200 are programmable via `#BAUD`).
+- Allow **~1 s** after power-up before sending commands.
+- Each command from host ends with **`\\r`** (0x0D), or **`\\r\\n`** (§4.1).
+- Normal responses end with **`\\r`** only. If **CRC** is enabled (`#CRCE 1`), the
+  line ends with ` : <decimal CRC16>` before `\\r`; the driver strips that suffix
+  before parsing.
 
-## Authoritative documentation
+## Implemented commands
 
-PyroScience publishes the full register map, calibration flow, status bits, and
-optional CRC rules. Start from their OEM / developer downloads (search for
-“PyroScience Unified Protocol” PDF for your firmware band).
+| Command | Response shape | Driver API |
+|--------|------------------|------------|
+| `#VERS` | `#VERS D N R S` | `ReadVersion()` |
+| `#IDNR` | `#IDNR N` (64-bit decimal) | `ReadUniqueId()` |
+| `#MOXY` | `#MOXY O T S` | `MeasureMoxy()` |
+| `#MRAW` | `#MRAW O T S D I A P H` | `MeasureMraw()` |
+| `#LOGO` | `#LOGO` | `FlashLogo()` |
 
-## Engineering scaling
+## Numeric decoding (same as data sheet tables)
 
-Unless the module enables the internal “1000×Oxygen” option, Results fields
-are communicated as **signed 32-bit integers in fixed-point with factor 0.001**
-(e.g. `20980` → 20.980 %O₂). The driver exposes both raw registers and scaled
-`double` fields in `fdo2::Measurement`.
+- **O** — pO₂ in **10⁻³ hPa** → hPa = `O * 1e-3`.
+- **T** — temperature in **m°C** → °C = `T * 1e-3`.
+- **S** — **unsigned 32-bit** status; see data sheet §4.3 bit definitions. Normal
+  operation: **S = 0 or 1** only; other values mean warnings/errors — host must
+  gate oxygen use accordingly.
+- **#MRAW** extras: **D** m°, **I** and **A** in µV → mV ×10⁻³, **P** in µbar → mbar ×10⁻⁶,
+  **H** in m%RH → %RH ×10⁻³.
 
-## Invalid samples
+## Volume % O₂
 
-The reference manual defines sentinel raw values (`-300000`) for invalid
-numeric slots; use `fdo2::IsInvalidRegisterValue()` when consuming raw registers.
+When pressure at the sensing membrane matches the **vent / back-side** pressure
+used for **P** in `#MRAW`, the data sheet gives:
+
+`%O₂ = 100 × pO₂ [hPa] / pAir [hPa]` with **mbar ≈ hPa** for the ratio.
+
+Use `VolumePercentO2(p_o2_hpa, pressure_mbar)` in `fdo2_types.hpp`.
+
+## Errors
+
+`#ERRO E` with signed **E** (Table 1, §4.4). On `DriverError::DeviceError`, read
+`Driver::LastDeviceErrorCode()`.
+
+## Not implemented here
+
+Commands that **write flash** (`#CALO`, `#CAHI`, `#CRCE`, `#SETM`, `#BCST`, `#BAUD`,
+`#WRUM`, …) are intentionally omitted from the minimal API until a safe HAL wrapper
+exists — they are rate-limited by **~20 000** flash cycles total (data sheet warning).
