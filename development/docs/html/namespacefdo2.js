@@ -40,6 +40,7 @@ var namespacefdo2 =
     [ "DecodeMoxy", "namespacefdo2.html#ad88f1544c863b02d761081eb873feac7", null ],
     [ "DecodeMraw", "namespacefdo2.html#a3f14b5fdb9143c3b11e252dc8c5230b1", null ],
     [ "FirmwareRevisionToDouble", "namespacefdo2.html#a167252e96f9b68b38500334b97be7b05", null ],
+    [ "GetDriverVersion", "namespacefdo2.html#a2a0538f8102cbadd8d90964ab88a02bd", null ],
     [ "MoxyStatusOkForOxygen", "namespacefdo2.html#a397955dab7ea58fca1a248aa7363bf86", null ],
     [ "ToString", "namespacefdo2.html#a8333f06f0c08cb444339d538e6b00cb8", null ],
     [ "VolumePercentO2", "namespacefdo2.html#abc470c6ce144ec5bdefdc9092a66d6ae", null ],

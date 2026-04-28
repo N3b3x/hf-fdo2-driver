@@ -94,6 +94,9 @@ $(function(){initNavTree('fdo2_8hpp.html',''); initResizable(); });
 </div>
 
 <div class="header">
+  <div class="summary">
+<a href="#namespaces">Namespaces</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">fdo2.hpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -103,6 +106,7 @@ $(function(){initNavTree('fdo2_8hpp.html',''); initResizable(); });
 <div class="textblock"><code>#include &quot;<a class="el" href="fdo2__uart__interface_8hpp_source.html">fdo2_uart_interface.hpp</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="fdo2__types_8hpp_source.html">fdo2_types.hpp</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="fdo2__driver_8hpp_source.html">fdo2_driver.hpp</a>&quot;</code><br />
+<code>#include &quot;fdo2_version.h&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for fdo2.hpp:</div>
 <div class="dyncontent">
@@ -115,6 +119,18 @@ This graph shows which files directly or indirectly include this file:</div>
 </div>
 </div>
 <p><a href="fdo2_8hpp_source.html">Go to the source code of this file.</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
+Namespaces</h2></td></tr>
+<tr class="memitem:namespacefdo2" id="r_namespacefdo2"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefdo2.html">fdo2</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a2a0538f8102cbadd8d90964ab88a02bd" id="r_a2a0538f8102cbadd8d90964ab88a02bd"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefdo2.html#a2a0538f8102cbadd8d90964ab88a02bd">fdo2::GetDriverVersion</a> () noexcept</td></tr>
+<tr class="memdesc:a2a0538f8102cbadd8d90964ab88a02bd"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classfdo2_1_1Driver.html" title="FDO2-G2 UART client.">Driver</a> version string (from generated fdo2_version.h).  <br /></td></tr>
+<tr class="separator:a2a0538f8102cbadd8d90964ab88a02bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Umbrella header for the HF-FDO2 (FDO2-G2) UART driver. </p>
 <p>Pulls in <code><a class="el" href="classfdo2_1_1UartInterface.html" title="CRTP base for PSUP serial transport.">fdo2::UartInterface</a></code>, typed readings (<code>MoxyReading</code>, <code>MrawReading</code>, <code>VersionInfo</code>), and <code><a class="el" href="classfdo2_1_1Driver.html" title="FDO2-G2 UART client.">fdo2::Driver</a>&lt;UartT&gt;</code> implementing the FDO2-G2 data sheet §4 command set. See <code>examples/esp32/</code> for an ESP-IDF UART adapter (default <b>19200</b> baud).</p>
