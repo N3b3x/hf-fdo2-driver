@@ -14,3 +14,13 @@
 #include "fdo2_uart_interface.hpp"
 #include "fdo2_types.hpp"
 #include "fdo2_driver.hpp"
+#include "fdo2_version.h"
+
+namespace fdo2 {
+
+/** @brief Driver version string (from generated @ref fdo2_version.h). */
+inline const char* GetDriverVersion() noexcept {
+    return HF_FDO2_VERSION_STRING;
+}
+
+}  // namespace fdo2
