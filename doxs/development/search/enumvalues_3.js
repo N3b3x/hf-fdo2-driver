@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['none_0',['None',['../namespacefdo2.html#a942c9c436fcde5e7570835a70358adafa6adf97f83acf6453d4a6a4b1070f3754',1,'fdo2']]]
+  ['moxy_0',['Moxy',['../classfdo2_1_1Driver.html#a50694450a3386f954db104b52f77d277a0105946de8e825d54acc24477bf37940',1,'fdo2::Driver']]],
+  ['mraw_1',['Mraw',['../classfdo2_1_1Driver.html#a50694450a3386f954db104b52f77d277ab5d8af428d325ad02e26068c79e49f75',1,'fdo2::Driver']]]
 ];

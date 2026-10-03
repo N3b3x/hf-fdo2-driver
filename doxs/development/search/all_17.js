@@ -11,12 +11,13 @@ var searchData=
   ['transport_20—_20tt_20fdo2_3a_3auartinterface_20derived_20tt_8',['Transport — &lt;tt&gt;fdo2::UartInterface\&lt;Derived\&gt;&lt;/tt&gt;',['../md_docs_2api__reference.html#autotoc_md10',1,'']]],
   ['troubleshooting_9',['Troubleshooting',['../md_docs_2troubleshooting.html',1,'']]],
   ['troubleshooting_2emd_10',['troubleshooting.md',['../troubleshooting_8md.html',1,'']]],
-  ['tt_20cmake_20hf_5ffdo2_5fbuild_5fsettings_20cmake_20tt_11',['Variables of interest (&lt;tt&gt;cmake/hf_fdo2_build_settings.cmake&lt;/tt&gt;)',['../md_docs_2cmake__integration.html#autotoc_md16',1,'']]],
-  ['tt_20deviceerror_20tt_20after_20tt_20erro_20tt_12',['&lt;tt&gt;DeviceError&lt;/tt&gt; after &lt;tt&gt;\#ERRO&lt;/tt&gt;',['../md_docs_2troubleshooting.html#autotoc_md49',1,'']]],
-  ['tt_20examples_20esp32_20tt_13',['ESP32-S3 (&lt;tt&gt;examples/esp32&lt;/tt&gt;)',['../md_docs_2examples.html#autotoc_md20',1,'']]],
-  ['tt_20fdo2_3a_3adriver_20uartt_20tt_14',['Driver — &lt;tt&gt;fdo2::Driver\&lt;UartT\&gt;&lt;/tt&gt;',['../md_docs_2api__reference.html#autotoc_md11',1,'']]],
-  ['tt_20fdo2_3a_3auartinterface_20derived_20tt_15',['Transport — &lt;tt&gt;fdo2::UartInterface\&lt;Derived\&gt;&lt;/tt&gt;',['../md_docs_2api__reference.html#autotoc_md10',1,'']]],
-  ['tt_20fdo2_5ftypes_20hpp_20tt_16',['Types — &lt;tt&gt;fdo2_types.hpp&lt;/tt&gt;',['../md_docs_2api__reference.html#autotoc_md12',1,'']]],
-  ['tt_20timeout_20tt_20or_20tt_20protocolerror_20tt_17',['&lt;tt&gt;Timeout&lt;/tt&gt; or &lt;tt&gt;ProtocolError&lt;/tt&gt;',['../md_docs_2troubleshooting.html#autotoc_md48',1,'']]],
-  ['types_20—_20tt_20fdo2_5ftypes_20hpp_20tt_18',['Types — &lt;tt&gt;fdo2_types.hpp&lt;/tt&gt;',['../md_docs_2api__reference.html#autotoc_md12',1,'']]]
+  ['tryreadreplyline_11',['TryReadReplyLine',['../classfdo2_1_1Driver.html#a13afac641b51fdfd85f2bbdba0d9ec34',1,'fdo2::Driver']]],
+  ['tt_20cmake_20hf_5ffdo2_5fbuild_5fsettings_20cmake_20tt_12',['Variables of interest (&lt;tt&gt;cmake/hf_fdo2_build_settings.cmake&lt;/tt&gt;)',['../md_docs_2cmake__integration.html#autotoc_md16',1,'']]],
+  ['tt_20deviceerror_20tt_20after_20tt_20erro_20tt_13',['&lt;tt&gt;DeviceError&lt;/tt&gt; after &lt;tt&gt;\#ERRO&lt;/tt&gt;',['../md_docs_2troubleshooting.html#autotoc_md49',1,'']]],
+  ['tt_20examples_20esp32_20tt_14',['ESP32-S3 (&lt;tt&gt;examples/esp32&lt;/tt&gt;)',['../md_docs_2examples.html#autotoc_md20',1,'']]],
+  ['tt_20fdo2_3a_3adriver_20uartt_20tt_15',['Driver — &lt;tt&gt;fdo2::Driver\&lt;UartT\&gt;&lt;/tt&gt;',['../md_docs_2api__reference.html#autotoc_md11',1,'']]],
+  ['tt_20fdo2_3a_3auartinterface_20derived_20tt_16',['Transport — &lt;tt&gt;fdo2::UartInterface\&lt;Derived\&gt;&lt;/tt&gt;',['../md_docs_2api__reference.html#autotoc_md10',1,'']]],
+  ['tt_20fdo2_5ftypes_20hpp_20tt_17',['Types — &lt;tt&gt;fdo2_types.hpp&lt;/tt&gt;',['../md_docs_2api__reference.html#autotoc_md12',1,'']]],
+  ['tt_20timeout_20tt_20or_20tt_20protocolerror_20tt_18',['&lt;tt&gt;Timeout&lt;/tt&gt; or &lt;tt&gt;ProtocolError&lt;/tt&gt;',['../md_docs_2troubleshooting.html#autotoc_md48',1,'']]],
+  ['types_20—_20tt_20fdo2_5ftypes_20hpp_20tt_19',['Types — &lt;tt&gt;fdo2_types.hpp&lt;/tt&gt;',['../md_docs_2api__reference.html#autotoc_md12',1,'']]]
 ];
