@@ -200,28 +200,7 @@ public:
         if (err != DriverError::None) {
             return DriverResult<VersionInfo>::failure(err);
         }
-        char tstore[128];
-        const char* tok[8];
-        std::size_t nt = 0;
-        if (detail::Tokenize(line, tstore, sizeof(tstore), tok, 8, &nt) != DriverError::None) {
-            return DriverResult<VersionInfo>::failure(DriverError::ProtocolError);
-        }
-        if (nt >= 2 && detail::IsErroHeader(tok[0])) {
-            return FailErro<VersionInfo>(tok, nt);
-        }
-        if (nt < 5U || std::strncmp(tok[0], "#VERS", 5) != 0) {
-            return DriverResult<VersionInfo>::failure(DriverError::ProtocolError);
-        }
-        bool ok = true;
-        VersionInfo v{};
-        v.device_id          = detail::ParseI32(tok[1], &ok);
-        v.num_channels       = detail::ParseI32(tok[2], &ok);
-        v.firmware_revision  = detail::ParseI32(tok[3], &ok);
-        v.sensor_types       = detail::ParseI32(tok[4], &ok);
-        if (!ok) {
-            return DriverResult<VersionInfo>::failure(DriverError::ProtocolError);
-        }
-        return DriverResult<VersionInfo>::success(v);
+        return ParseVersionLine(line, &last_device_error_);
     }
 
     DriverResult<uint64_t> ReadUniqueId() noexcept {
@@ -268,26 +247,7 @@ public:
         if (err != DriverError::None) {
             return DriverResult<MoxyReading>::failure(err);
         }
-        char tstore[128];
-        const char* tok[8];
-        std::size_t nt = 0;
-        if (detail::Tokenize(line, tstore, sizeof(tstore), tok, 8, &nt) != DriverError::None) {
-            return DriverResult<MoxyReading>::failure(DriverError::ProtocolError);
-        }
-        if (nt >= 2 && detail::IsErroHeader(tok[0])) {
-            return FailErro<MoxyReading>(tok, nt);
-        }
-        if (nt != 4U || std::strncmp(tok[0], "#MOXY", 5) != 0) {
-            return DriverResult<MoxyReading>::failure(DriverError::ProtocolError);
-        }
-        bool ok = true;
-        const int32_t o = detail::ParseI32(tok[1], &ok);
-        const int32_t t = detail::ParseI32(tok[2], &ok);
-        const uint32_t s = detail::ParseU32(tok[3], &ok);
-        if (!ok) {
-            return DriverResult<MoxyReading>::failure(DriverError::ProtocolError);
-        }
-        return DriverResult<MoxyReading>::success(DecodeMoxy(o, t, s));
+        return ParseMoxyLine(line, &last_device_error_);
     }
 
     /// Same measurement plus raw optics / vent-path pressure / internal RH.
@@ -303,6 +263,98 @@ public:
         if (err != DriverError::None) {
             return DriverResult<MrawReading>::failure(err);
         }
+        return ParseMrawLine(line, &last_device_error_);
+    }
+
+    /**
+     * @name Split exchange — send now, parse the reply later
+     * @details For a caller that serves other devices while the probe
+     *          measures (~150 ms): @ref SendMeasure writes the command and
+     *          returns; when the transport reports a complete line,
+     *          @ref TryReadReplyLine takes it without waiting and
+     *          @ref ParseMoxyLine / @ref ParseMrawLine decode it. The caller
+     *          owns the reply timeout. Same wire protocol as @ref MeasureMoxy.
+     * @{
+     */
+    /// Which command @ref SendMeasure starts (`Version` = the `#VERS` identity handshake).
+    enum class Measure : uint8_t { Moxy, Mraw, Version };
+
+    /// Drop stale input, then send `#MOXY` / `#MRAW`. Does not wait for the reply.
+    DriverError SendMeasure(Measure m) noexcept {
+        last_device_error_ = 0;
+        char tx[12];
+        const char* cmd = (m == Measure::Mraw) ? "#MRAW" : (m == Measure::Version) ? "#VERS" : "#MOXY";
+        if (!detail::AppendCmd(tx, sizeof(tx), cmd)) {
+            return DriverError::InvalidParameter;
+        }
+        uart_.flush_rx();
+        uart_.write(reinterpret_cast<const uint8_t*>(tx), std::strlen(tx));
+        return DriverError::None;
+    }
+
+    /**
+     * @brief Take one complete reply line if the transport already has it.
+     * @return None with @p line filled; Timeout when no complete line is waiting.
+     */
+    DriverError TryReadReplyLine(char* line, std::size_t line_cap) noexcept {
+        return detail::ReadAsciiLine(uart_, line, line_cap, 0U);
+    }
+
+    /// Decode a `#VERS` reply line. @p device_error receives the `#ERRO` code (may be null).
+    static DriverResult<VersionInfo> ParseVersionLine(const char* line,
+                                                      int32_t* device_error) noexcept {
+        char tstore[128];
+        const char* tok[8];
+        std::size_t nt = 0;
+        if (detail::Tokenize(line, tstore, sizeof(tstore), tok, 8, &nt) != DriverError::None) {
+            return DriverResult<VersionInfo>::failure(DriverError::ProtocolError);
+        }
+        if (nt >= 2 && detail::IsErroHeader(tok[0])) {
+            return FailErroStatic<VersionInfo>(tok, nt, device_error);
+        }
+        if (nt < 5U || std::strncmp(tok[0], "#VERS", 5) != 0) {
+            return DriverResult<VersionInfo>::failure(DriverError::ProtocolError);
+        }
+        bool ok = true;
+        VersionInfo v{};
+        v.device_id          = detail::ParseI32(tok[1], &ok);
+        v.num_channels       = detail::ParseI32(tok[2], &ok);
+        v.firmware_revision  = detail::ParseI32(tok[3], &ok);
+        v.sensor_types       = detail::ParseI32(tok[4], &ok);
+        if (!ok) {
+            return DriverResult<VersionInfo>::failure(DriverError::ProtocolError);
+        }
+        return DriverResult<VersionInfo>::success(v);
+    }
+
+    /// Decode a `#MOXY` reply line. @p device_error receives the `#ERRO` code (may be null).
+    static DriverResult<MoxyReading> ParseMoxyLine(const char* line,
+                                                   int32_t* device_error) noexcept {
+        char tstore[128];
+        const char* tok[8];
+        std::size_t nt = 0;
+        if (detail::Tokenize(line, tstore, sizeof(tstore), tok, 8, &nt) != DriverError::None) {
+            return DriverResult<MoxyReading>::failure(DriverError::ProtocolError);
+        }
+        if (nt >= 2 && detail::IsErroHeader(tok[0])) {
+            return FailErroStatic<MoxyReading>(tok, nt, device_error);
+        }
+        if (nt != 4U || std::strncmp(tok[0], "#MOXY", 5) != 0) {
+            return DriverResult<MoxyReading>::failure(DriverError::ProtocolError);
+        }
+        bool ok = true;
+        const int32_t o = detail::ParseI32(tok[1], &ok);
+        const int32_t t = detail::ParseI32(tok[2], &ok);
+        const uint32_t s = detail::ParseU32(tok[3], &ok);
+        if (!ok) {
+            return DriverResult<MoxyReading>::failure(DriverError::ProtocolError);
+        }
+        return DriverResult<MoxyReading>::success(DecodeMoxy(o, t, s));
+    }
+
+    /// Decode a `#MRAW` reply line. @p device_error receives the `#ERRO` code (may be null).
+    static DriverResult<MrawReading> ParseMrawLine(const char* line,
+                                                   int32_t* device_error) noexcept {
         char tstore[256];
         const char* tok[16];
         std::size_t nt = 0;
@@ -310,7 +362,7 @@ public:
             return DriverResult<MrawReading>::failure(DriverError::ProtocolError);
         }
         if (nt >= 2 && detail::IsErroHeader(tok[0])) {
-            return FailErro<MrawReading>(tok, nt);
+            return FailErroStatic<MrawReading>(tok, nt, device_error);
         }
         if (nt != 9U || std::strncmp(tok[0], "#MRAW", 5) != 0) {
             return DriverResult<MrawReading>::failure(DriverError::ProtocolError);
@@ -329,6 +381,7 @@ public:
         }
         return DriverResult<MrawReading>::success(DecodeMraw(o, t, s, d, i, a, p, h));
     }
+    /** @} */
 
     /// Flash the status LED (identification).
     DriverResult<void> FlashLogo() noexcept {
@@ -337,6 +390,23 @@ public:
     }
 
 private:
+    template <typename T>
+    static DriverResult<T> FailErroStatic(const char* tok[], std::size_t nt,
+                                          int32_t* device_error) noexcept {
+        int32_t code = -1;
+        if (nt >= 2) {
+            bool ok = false;
+            code = detail::ParseI32(tok[1], &ok);
+            if (!ok) {
+                code = -1;
+            }
+        }
+        if (device_error != nullptr) {
+            *device_error = code;
+        }
+        return DriverResult<T>::failure(DriverError::DeviceError);
+    }
+
     template <typename T>
     DriverResult<T> FailErro(const char* tok[], std::size_t nt) noexcept {
         if (nt >= 2) {

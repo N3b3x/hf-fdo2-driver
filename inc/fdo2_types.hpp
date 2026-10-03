@@ -104,7 +104,7 @@ struct MoxyReading {
  * @brief Decoded `#MRAW O T S D I A P H` (data sheet §4.3).
  *
  * **D** millidegrees phase, **I** and **A** in microvolts (µV) → divide by 1000 for mV,
- * **P** in microbar (µbar) → ×10⁻⁶ for mbar, **H** in milli-%RH (m%RH) → ×10⁻³ for %RH.
+ * **P** in microbar (µbar) → ×10⁻³ for mbar (1 mbar = 1000 µbar), **H** in milli-%RH (m%RH) → ×10⁻³ for %RH.
  */
 struct MrawReading : MoxyReading {
     int32_t d_raw{}; ///< D (m°).
@@ -116,7 +116,7 @@ struct MrawReading : MoxyReading {
     double dphi_deg{};          ///< D × 10⁻³ degrees.
     double signal_intensity_mv{}; ///< I × 10⁻³ mV.
     double ambient_light_mv{};    ///< A × 10⁻³ mV.
-    double pressure_mbar{};       ///< P × 10⁻⁶ mbar (≈ hPa).
+    double pressure_mbar{};       ///< P × 10⁻³ mbar (≈ hPa).
     double rh_in_housing_pct{};   ///< H × 10⁻³ %RH.
 };
 
@@ -160,7 +160,7 @@ inline MrawReading DecodeMraw(int32_t o_raw, int32_t t_raw, uint32_t s, int32_t 
     r.dphi_deg               = static_cast<double>(d_raw) * 1e-3;
     r.signal_intensity_mv    = static_cast<double>(i_raw) * 1e-3;
     r.ambient_light_mv       = static_cast<double>(a_raw) * 1e-3;
-    r.pressure_mbar          = static_cast<double>(p_raw) * 1e-6;
+    r.pressure_mbar          = static_cast<double>(p_raw) * 1e-3;  /* µbar → mbar */
     r.rh_in_housing_pct      = static_cast<double>(h_raw) * 1e-3;
     return r;
 }

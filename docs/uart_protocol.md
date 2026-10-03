@@ -38,7 +38,7 @@ before CR. The driver **strips** that suffix before tokenizing.
 - **T** — temperature in **m°C** → `temp_c = T × 10⁻³`.
 - **S** — **unsigned 32-bit** status. Normal operation: **S = 0 or 1** only.
 - **#MRAW** extras: **D** in millidegrees; **I**, **A** in **µV** → mV with `×10⁻³`;
-  **P** in **µbar** → mbar with `×10⁻⁶`; **H** in **m%RH** → `%RH` with `×10⁻³`.
+  **P** in **µbar** → mbar with `×10⁻³` (1 mbar = 1000 µbar); **H** in **m%RH** → `%RH` with `×10⁻³`.
 
 Constants for individual status bits live in `fdo2::moxy_status` in `fdo2_types.hpp`.
 
