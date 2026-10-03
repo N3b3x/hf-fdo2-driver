@@ -131,7 +131,7 @@ Numeric decoding</h1>
 <li><b>O</b> — pO₂ in <b>10⁻³ hPa</b> → <code>p_o2_hpa = O × 10⁻³</code>.</li>
 <li><b>T</b> — temperature in <b>m°C</b> → <code>temp_c = T × 10⁻³</code>.</li>
 <li><b>S</b> — <b>unsigned 32-bit</b> status. Normal operation: <b>S = 0 or 1</b> only.</li>
-<li>**#MRAW** extras: <b>D</b> in millidegrees; <b>I</b>, <b>A</b> in <b>µV</b> → mV with <code>×10⁻³</code>; <b>P</b> in <b>µbar</b> → mbar with <code>×10⁻⁶</code>; <b>H</b> in <b>mRH</b> → <code>RH</code> with <code>×10⁻³</code>.</li>
+<li>**#MRAW** extras: <b>D</b> in millidegrees; <b>I</b>, <b>A</b> in <b>µV</b> → mV with <code>×10⁻³</code>; <b>P</b> in <b>µbar</b> → mbar with <code>×10⁻³</code> (1 mbar = 1000 µbar); <b>H</b> in <b>mRH</b> → <code>RH</code> with <code>×10⁻³</code>.</li>
 </ul>
 <p>Constants for individual status bits live in <code><a class="el" href="namespacefdo2_1_1moxy__status.html">fdo2::moxy_status</a></code> in <code><a class="el" href="fdo2__types_8hpp.html" title="FDO2-G2 UART types, scaling, and status decoding (PyroScience data sheet v5).">fdo2_types.hpp</a></code>.</p>
 <h1><a class="anchor" id="autotoc_md56"></a>

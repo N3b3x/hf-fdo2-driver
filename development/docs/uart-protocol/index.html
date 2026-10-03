@@ -352,7 +352,7 @@ before CR. The driver **strips** that suffix before tokenizing.</decimal></li>
   <li><strong>T</strong> — temperature in <strong>m°C</strong> → <code class="language-plaintext highlighter-rouge">temp_c = T × 10⁻³</code>.</li>
   <li><strong>S</strong> — <strong>unsigned 32-bit</strong> status. Normal operation: <strong>S = 0 or 1</strong> only.</li>
   <li><strong>#MRAW</strong> extras: <strong>D</strong> in millidegrees; <strong>I</strong>, <strong>A</strong> in <strong>µV</strong> → mV with <code class="language-plaintext highlighter-rouge">×10⁻³</code>;
-<strong>P</strong> in <strong>µbar</strong> → mbar with <code class="language-plaintext highlighter-rouge">×10⁻⁶</code>; <strong>H</strong> in <strong>m%RH</strong> → <code class="language-plaintext highlighter-rouge">%RH</code> with <code class="language-plaintext highlighter-rouge">×10⁻³</code>.</li>
+<strong>P</strong> in <strong>µbar</strong> → mbar with <code class="language-plaintext highlighter-rouge">×10⁻³</code> (1 mbar = 1000 µbar); <strong>H</strong> in <strong>m%RH</strong> → <code class="language-plaintext highlighter-rouge">%RH</code> with <code class="language-plaintext highlighter-rouge">×10⁻³</code>.</li>
 </ul>
 
 <p>Constants for individual status bits live in <code class="language-plaintext highlighter-rouge">fdo2::moxy_status</code> in <code class="language-plaintext highlighter-rouge">fdo2_types.hpp</code>.</p>

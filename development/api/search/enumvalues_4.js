@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['protocolerror_0',['ProtocolError',['../namespacefdo2.html#a942c9c436fcde5e7570835a70358adafaca3da8f495e4e628912a7798655da6c2',1,'fdo2']]]
+  ['none_0',['None',['../namespacefdo2.html#a942c9c436fcde5e7570835a70358adafa6adf97f83acf6453d4a6a4b1070f3754',1,'fdo2']]]
 ];

@@ -414,7 +414,7 @@
   },"59": {
     "doc": "UART protocol",
     "title": "Numeric decoding",
-    "content": ". | O — pO₂ in 10⁻³ hPa → p_o2_hpa = O × 10⁻³. | T — temperature in m°C → temp_c = T × 10⁻³. | S — unsigned 32-bit status. Normal operation: S = 0 or 1 only. | #MRAW extras: D in millidegrees; I, A in µV → mV with ×10⁻³; P in µbar → mbar with ×10⁻⁶; H in m%RH → %RH with ×10⁻³. | . Constants for individual status bits live in fdo2::moxy_status in fdo2_types.hpp. ",
+    "content": ". | O — pO₂ in 10⁻³ hPa → p_o2_hpa = O × 10⁻³. | T — temperature in m°C → temp_c = T × 10⁻³. | S — unsigned 32-bit status. Normal operation: S = 0 or 1 only. | #MRAW extras: D in millidegrees; I, A in µV → mV with ×10⁻³; P in µbar → mbar with ×10⁻³ (1 mbar = 1000 µbar); H in m%RH → %RH with ×10⁻³. | . Constants for individual status bits live in fdo2::moxy_status in fdo2_types.hpp. ",
     "url": "/hf-fdo2-driver/development/docs/uart-protocol/#numeric-decoding",
     
     "relUrl": "/docs/uart-protocol/#numeric-decoding"
